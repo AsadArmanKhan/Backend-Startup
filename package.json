@@ -1,0 +1,15 @@
+{
+  "name": "day-03",
+  "version": "1.0.0",
+  "description": "\"This is mu first API by using Express.Js and Mongose \"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Asad Arman Khan",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.14.1"
+  }
+}
