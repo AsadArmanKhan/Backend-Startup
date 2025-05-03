@@ -1,7 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors")
 const server = express();
+
+
 server.use(express.json())
+server.use(cors({ origin: "http://localhost:5173" }))
 
 
 const userSchema = new mongoose.Schema({
@@ -32,6 +36,7 @@ const UserModel = mongoose.model("User", userSchema);
 server.post("/user/create", (req, res) => {
 
     try {
+        console.log(req.body);
         if (!req.body.name || !req.body.email) {
             return res.send({
                 msg: "Fill all the options",
@@ -46,12 +51,12 @@ server.post("/user/create", (req, res) => {
         })
 
         user.save().then(() => {
-            res.send({
+            res.status(201).json({
                 msg: "user created succesfully",
                 flag: 1
-            })
+            });
         }).catch((error) => {
-            res.send({
+            res.status(400).send({
                 msg: "user not created",
                 flag: 0
             })
@@ -60,7 +65,7 @@ server.post("/user/create", (req, res) => {
 
         })
     } catch (error) {
-        res.send({
+        res.status(500).json({
             msg: "internal server error",
             flag: 0,
         })
@@ -79,7 +84,7 @@ server.get("/user/get-data", async (req, res) => {
         res.send({
             msg: "User data fetched Successfully",
             flag: 1,
-            data: user,
+            users: user,
             total: user.length
         })
     } catch (error) {
@@ -137,10 +142,44 @@ server.patch("/user/status/:id", async (req, res) => {
     try {
         const id = req.params.id;
         const user = await UserModel.findById(id);
+        if (user) {
+            await UserModel.updateOne(
+                {
+                    _id: id
+                },
+                {
+                    $set: {
+                        status: !user.status
+                    }
+                }
+            ).then(
+                () => {
+                    res.send({
+                        msg: "User status updated",
+                        flag: 1
+                    })
+
+                }).catch(
+                    () => {
+                        res.send({
+                            msg: "unable to update user status",
+                            flag: 0
+                        })
+                    })
+        } else {
+            res.send({
+                msg: "User not found",
+                flag: 0
+            })
+        }
         // res.end("HELLO");
     } catch (error) {
-        
-        console.log(error);
+
+        console.log(error)
+        res.send({
+            msg: "internal  server error",
+            flag: 0
+        })
     }
 })
 
