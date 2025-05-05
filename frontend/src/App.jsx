@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
+// import e from 'express';
 
 
 
 export default function App() {
   const [users, setUsers] = useState([]);
+  const [userDatail, setUserDatail] = useState(null);
   const notify = (msg, flag) => toast(msg, { type: flag ? "success" : "error" });
 
   function fetchData() {
@@ -33,14 +35,28 @@ export default function App() {
     const data = {
       name: e.target.name.value,
       email: e.target.email.value,
-      phone: e.target.contact.value,
+      contact: e.target.contact.value,
+    }
+
+    console.log(data)
+
+    let API = null;
+    if (userDatail == null) {
+      API = axios.post("http://localhost:5000/user/create", data)
+
+    } else {
+      API = axios.put(`http://localhost:5000/user/update/${userDatail._id}`, data)
     }
 
 
-    axios.post("http://localhost:5000/user/create", data).then(
+    setUserDatail(null);
+    e.target.reset();
+    // console.log(API);
+
+    API.then(
       (res) => {
         notify(res.data.msg, res.data.flag)
-        if (res.data.flag === 1) {
+        if (res.data.flag == 1) {
           console.log(res.data);
           fetchData();
 
@@ -55,7 +71,7 @@ export default function App() {
   }
 
   const deleteHandler = (id) => {
-    axios.delete("http://localhost:5000/user/delete/" + id).then(
+    axios.delete(`http://localhost:5000/user/delete/${id}`).then(
       (response) => {
         notify(response.data.msg, response.data.flag)
         if (response.data.flag) {
@@ -68,6 +84,22 @@ export default function App() {
 
       })
 
+  }
+
+  const statusHandler = (id) => {
+    axios.patch(`http://localhost:5000/user/status/${id}`).then(
+      (response) => {
+        notify(response.data.msg, response.data.flag)
+        if (response.data.flag === 1) {
+          fetchData();
+        }
+      }
+    ).catch(
+      (error) => {
+        console.log(error);
+
+      }
+    )
   }
 
   return (
@@ -86,18 +118,21 @@ export default function App() {
               name="name"
               type="text"
               placeholder="Name"
+              defaultValue={userDatail?.name}
               className="border p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
               name="email"
               type="email"
               placeholder="Email"
+              defaultValue={userDatail?.email}
               className="border p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <input
               name="contact"
               type="text"
               placeholder="Contact"
+              defaultValue={userDatail?.contact}
               className="border p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
@@ -131,12 +166,17 @@ export default function App() {
                   <td className="py-2 px-4">{data.email}</td>
                   <td className="py-2 px-4">{data.contact}</td>
                   <td className="py-2 px-4">
-                    <button className="text-blue-600 border bg-yellow-300 py-2 px-4 rounded-2xl hover:underline">
-                      Status
+                    <button onClick={() => statusHandler(data._id)} className={`${data.status ?
+                      'bg-green-600 ' : 'bg-red-500'
+                      } text-white border  py-2 px-4 rounded-2xl hover:underline`}>
+                      {data.status ?
+                        "Active"
+                        :
+                        "Inactive"}
                     </button>
                   </td>
                   <td className="py-2 px-4 space-x-2">
-                    <button className="text-blue-600 border bg-blue-300 py-2 px-4 rounded-2xl hover:underline">
+                    <button onClick={() => setUserDatail(data)} className="text-blue-600 border bg-blue-300 py-2 px-4 rounded-2xl hover:underline">
                       Edit
                     </button>
                     <button onClick={() => deleteHandler(data._id)} className="text-white border bg-red-500 py-2 px-3 rounded-2xl hover:underline">
